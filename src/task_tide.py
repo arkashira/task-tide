@@ -20,50 +20,20 @@ class TaskTide:
     def add_task(self, task: Task):
         self.tasks.append(task)
 
-    def prioritize_tasks(self):
+    def get_prioritized_tasks(self) -> List[Task]:
         return sorted(self.tasks, key=lambda task: task.importance.value, reverse=True)
 
-    def save_tasks(self, filename: str):
-        tasks_data = [{"name": task.name, "importance": task.importance.name} for task in self.tasks]
-        with open(filename, "w") as file:
-            json.dump(tasks_data, file)
+    def save_to_json(self, filename: str):
+        tasks_json = [{"name": task.name, "importance": task.importance.name} for task in self.tasks]
+        with open(filename, "w") as f:
+            json.dump(tasks_json, f)
 
-    def load_tasks(self, filename: str):
-        try:
-            with open(filename, "r") as file:
-                tasks_data = json.load(file)
-                self.tasks = [Task(task["name"], ImportanceLevel[task["importance"]]) for task in tasks_data]
-        except FileNotFoundError:
-            pass
-
-def main():
-    task_tide = TaskTide()
-    while True:
-        print("1. Add task")
-        print("2. Prioritize tasks")
-        print("3. Save tasks")
-        print("4. Load tasks")
-        print("5. Exit")
-        choice = input("Choose an option: ")
-        if choice == "1":
-            name = input("Enter task name: ")
-            importance = input("Enter importance level (LOW, MEDIUM, HIGH): ")
-            task = Task(name, ImportanceLevel[importance])
+    @classmethod
+    def load_from_json(cls, filename: str):
+        task_tide = cls()
+        with open(filename, "r") as f:
+            tasks_json = json.load(f)
+        for task_json in tasks_json:
+            task = Task(task_json["name"], ImportanceLevel[task_json["importance"]])
             task_tide.add_task(task)
-        elif choice == "2":
-            prioritized_tasks = task_tide.prioritize_tasks()
-            for i, task in enumerate(prioritized_tasks):
-                print(f"{i+1}. {task.name} ({task.importance.name})")
-        elif choice == "3":
-            filename = input("Enter filename: ")
-            task_tide.save_tasks(filename)
-        elif choice == "4":
-            filename = input("Enter filename: ")
-            task_tide.load_tasks(filename)
-        elif choice == "5":
-            break
-        else:
-            print("Invalid option")
-
-if __name__ == "__main__":
-    main()
+        return task_tide
